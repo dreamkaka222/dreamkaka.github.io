@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感谢观看 - 烟花彩蛋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: white;
+            font-family: 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .thank-you-message {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .thank-you-message h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s ease-in-out infinite;
+        }
+        
+        .thank-you-message p {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        /* 烟花数量控制面板 */
+        .fireworks-control {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            min-width: 200px;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .fireworks-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .fireworks-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .fireworks-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .slider-value {
+            min-width: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+        
+        @keyframes rainbow {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .thank-you-message {
+            animation: fadeIn 2s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="thank-you-message">
+        <h1>🎉 感谢观看 🎉</h1>
+        <p>感谢你看完了全片版本介绍<br>这是留给你的小彩蛋<br>希望你喜欢</p>
+    </div>
+
+    <!-- 烟花数量控制面板 -->
+    <div class="fireworks-control">
+        <label class="control-label">烟花密度调节</label>
+        <div class="slider-container">
+            <input type="range" min="1" max="10" value="3" class="fireworks-slider" id="fireworksDensity">
+            <span class="slider-value" id="densityValue">3</span>
+        </div>
+    </div>
+
+    <script>
+        class Firework {
+            constructor() {
+                this.x = Math.random() * window.innerWidth;
+                this.y = window.innerHeight;
+                this.speed = 2 + Math.random() * 3;
+                this.size = 2 + Math.random() * 3;
+                this.color = this.getRandomColor();
+                this.element = this.createFirework();
+                this.exploded = false;
+            }
+            
+            getRandomColor() {
+                const colors = [
+                    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', 
+                    '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd',
+                    '#ff3838', '#ff9f1a', '#32ff7e', '#18dcff',
+                    '#7d5fff', '#ff4d4d', '#ffaf40', '#17c0eb'
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            getExplosionColors(baseColor) {
+                const colorSchemes = {
+                    warm: ['#ff3838', '#ff9f1a', '#ffaf40', '#ff4d4d', '#feca57'],
+                    cool: ['#18dcff', '#32ff7e', '#7d5fff', '#4ecdc4', '#45b7d1'],
+                    rainbow: ['#ff3838', '#ff9f1a', '#32ff7e', '#18dcff', '#7d5fff'],
+                    pastel: ['#ff9ff3', '#96ceb4', '#54a0ff', '#5f27cd', '#feca57']
+                };
+                
+                let scheme;
+                if (baseColor.includes('ff') && baseColor.includes('38')) scheme = colorSchemes.warm;
+                else if (baseColor.includes('dc') || baseColor.includes('7e')) scheme = colorSchemes.cool;
+                else if (baseColor.includes('9f') || baseColor.includes('ca')) scheme = colorSchemes.pastel;
+                else scheme = colorSchemes.rainbow;
+                
+                return scheme;
+            }
+            
+            createFirework() {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = this.x + 'px';
+                firework.style.top = this.y + 'px';
+                firework.style.width = this.size + 'px';
+                firework.style.height = this.size + 'px';
+                firework.style.background = this.color;
+                firework.style.boxShadow = `0 0 10px ${this.color}`;
+                document.body.appendChild(firework);
+                return firework;
+            }
+            
+            update() {
+                if (!this.exploded) {
+                    this.y -= this.speed;
+                    this.element.style.top = this.y + 'px';
+                    
+                    this.x += (Math.random() - 0.5) * 2;
+                    this.element.style.left = this.x + 'px';
+                    
+                    if (this.y < window.innerHeight * 0.3 + Math.random() * 100) {
+                        this.explode();
+                    }
+                }
+            }
+            
+            explode() {
+                this.exploded = true;
+                this.element.remove();
+                
+                const particleCount = 50 + Math.floor(Math.random() * 30);
+                const particles = [];
+                const explosionColors = this.getExplosionColors(this.color);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (i / particleCount) * Math.PI * 2;
+                    const speed = 1.5 + Math.random() * 3;
+                    const size = 1 + Math.random() * 2;
+                    const life = 1000 + Math.random() * 500;
+                    
+                    const particleColor = explosionColors[Math.floor(Math.random() * explosionColors.length)];
+                    
+                    const particle = document.createElement('div');
+                    particle.className = 'firework';
+                    particle.style.left = this.x + 'px';
+                    particle.style.top = this.y + 'px';
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    particle.style.background = particleColor;
+                    particle.style.boxShadow = `0 0 8px ${particleColor}`;
+                    particle.style.borderRadius = '50%';
+                    document.body.appendChild(particle);
+                    
+                    particles.push({
+                        element: particle,
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: life,
+                        age: 0,
+                        color: particleColor
+                    });
+                }
+                
+                const animateParticles = () => {
+                    particles.forEach((particle, index) => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vy += 0.05;
+                        particle.age += 16;
+                        
+                        particle.vx *= 0.99;
+                        particle.vy *= 0.99;
+                        
+                        particle.element.style.left = particle.x + 'px';
+                        particle.element.style.top = particle.y + 'px';
+                        
+                        const progress = particle.age / particle.life;
+                        particle.element.style.opacity = 1 - progress;
+                        
+                        if (particle.age >= particle.life) {
+                            particle.element.remove();
+                            particles.splice(index, 1);
+                        }
+                    });
+                    
+                    if (particles.length > 0) {
+                        requestAnimationFrame(animateParticles);
+                    }
+                };
+                
+                animateParticles();
+            }
+        }
+        
+        class FireworksSystem {
+            constructor() {
+                this.fireworks = [];
+                this.lastFireworkTime = 0;
+                this.fireworkInterval = 800;
+                this.maxFireworks = 3; // 默认最大烟花数量
+                this.densityLevel = 3; // 默认密度级别
+                this.animate();
+                
+                // 监听滑块变化
+                this.setupDensityControl();
+            }
+            
+            setupDensityControl() {
+                const slider = document.getElementById('fireworksDensity');
+                const valueDisplay = document.getElementById('densityValue');
+                
+                slider.addEventListener('input', (e) => {
+                    this.densityLevel = parseInt(e.target.value);
+                    valueDisplay.textContent = this.densityLevel;
+                    this.updateDensitySettings();
+                });
+            }
+            
+            updateDensitySettings() {
+                // 根据密度级别调整参数
+                switch(this.densityLevel) {
+                    case 1: // 最低密度
+                        this.maxFireworks = 2;
+                        this.fireworkInterval = 1500 + Math.random() * 1000;
+                        break;
+                    case 2:
+                        this.maxFireworks = 3;
+                        this.fireworkInterval = 1000 + Math.random() * 800;
+                        break;
+                    case 3: // 中等密度（默认）
+                        this.maxFireworks = 5;
+                        this.fireworkInterval = 800 + Math.random() * 600;
+                        break;
+                    case 4:
+                        this.maxFireworks = 7;
+                        this.fireworkInterval = 600 + Math.random() * 400;
+                        break;
+                    case 5:
+                        this.maxFireworks = 8;
+                        this.fireworkInterval = 500 + Math.random() * 300;
+                        break;
+                    case 6:
+                        this.maxFireworks = 10;
+                        this.fireworkInterval = 400 + Math.random() * 200;
+                        break;
+                    case 7:
+                        this.maxFireworks = 12;
+                        this.fireworkInterval = 300 + Math.random() * 150;
+                        break;
+                    case 8:
+                        this.maxFireworks = 15;
+                        this.fireworkInterval = 250 + Math.random() * 100;
+                        break;
+                    case 9:
+                        this.maxFireworks = 18;
+                        this.fireworkInterval = 200 + Math.random() * 80;
+                        break;
+                    case 10: // 最高密度
+                        this.maxFireworks = 20;
+                        this.fireworkInterval = 150 + Math.random() * 50;
+                        break;
+                }
+            }
+            
+            addFirework() {
+                if (this.fireworks.length < this.maxFireworks) {
+                    this.fireworks.push(new Firework());
+                }
+            }
+            
+            animate() {
+                const currentTime = Date.now();
+                
+                if (currentTime - this.lastFireworkTime > this.fireworkInterval) {
+                    this.addFirework();
+                    this.lastFireworkTime = currentTime;
+                }
+                
+                this.fireworks.forEach((firework, index) => {
+                    firework.update();
+                    
+                    if (firework.exploded) {
+                        this.fireworks.splice(index, 1);
+                    }
+                });
+                
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // 页面加载完成后启动烟花系统
+        window.addEventListener('load', () => {
+            const fireworksSystem = new FireworksSystem();
+            
+            // 添加点击事件
+            document.body.addEventListener('click', (e) => {
+                const firework = new Firework();
+                firework.x = e.clientX;
+                firework.y = e.clientY;
+                firework.explode();
+                
+                setTimeout(() => {
+                    const extraFirework = new Firework();
+                    extraFirework.x = e.clientX + (Math.random() - 0.5) * 50;
+                    extraFirework.y = e.clientY + (Math.random() - 0.5) * 50;
+                    extraFirework.explode();
+                }, 100);
+            });
+            
+            // 添加键盘事件
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    for (let i = 0; i < 2; i++) {
+                        setTimeout(() => {
+                            const firework = new Firework();
+                            firework.x = Math.random() * window.innerWidth;
+                            firework.y = Math.random() * window.innerHeight;
+                            firework.explode();
+                        }, i * 200);
+                    }
+                }
+            });
+        });
+        
+        // 窗口大小改变时重新调整
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.firework').forEach(firework => {
+                firework.remove();
+            });
+        });
+    </script>
+</body>
+</html>
